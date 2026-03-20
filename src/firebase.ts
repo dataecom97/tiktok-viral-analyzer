@@ -12,20 +12,25 @@ export const signIn = () => signInWithPopup(auth, googleProvider);
 
 export const loginWithCredentials = async (username: string, pass: string) => {
   if (username === 'affnfc' && pass === 'aff123') {
-    const email = 'affnfc@app.com';
+    // Chúng ta sử dụng một email cụ thể cho tài khoản admin này. 
+    // Nếu mật khẩu thay đổi trong mã nguồn, chúng ta thay đổi hậu tố email để "reset" tài khoản trong Firebase Auth.
+    const email = 'affnfc_v2@app.com'; 
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, pass);
       return userCredential;
     } catch (error: any) {
+      // Nếu đăng nhập thất bại, có thể là do người dùng chưa tồn tại
       if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
-        // Try to create if not found, or if invalid (maybe password changed in code but not in firebase)
         try {
           const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
           await updateProfile(userCredential.user, { displayName: 'AFFNFC Admin' });
           return userCredential;
-        } catch (createError) {
-          // If create fails, it might be because user already exists but password was wrong
-          throw error;
+        } catch (createError: any) {
+          // Nếu tạo thất bại vì email đã được sử dụng, nghĩa là mật khẩu trong Firebase khác.
+          if (createError.code === 'auth/email-already-in-use') {
+             throw new Error('Tài khoản admin đã tồn tại với mật khẩu khác. Vui lòng liên hệ hỗ trợ hoặc thử lại.');
+          }
+          throw createError;
         }
       }
       throw error;
@@ -36,7 +41,7 @@ export const loginWithCredentials = async (username: string, pass: string) => {
 
 export const logOut = () => signOut(auth);
 
-// Test connection
+// Kiểm tra kết nối
 async function testConnection() {
   try {
     await getDocFromServer(doc(db, 'test', 'connection'));
