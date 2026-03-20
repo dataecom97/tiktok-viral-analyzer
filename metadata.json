@@ -1,0 +1,5 @@
+{
+  "name": "TikTok Viral Analyzer",
+  "description": "Analyze TikTok videos and transcripts for viral potential using Gemini AI.",
+  "requestFramePermissions": []
+}
